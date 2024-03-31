@@ -159,6 +159,3 @@ app.get('/pendingtransactions', async (req, res) => {
       res.json({ error: err.message });
    }
 });
-
-
-app.listen(3001);
