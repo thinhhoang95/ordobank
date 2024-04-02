@@ -167,7 +167,7 @@ app.post('/transferFromORD', async (req, res) => {
          return;
       }
       // Convert amount in ORD to KVND
-      const exchangeRate = 7292;
+      const exchangeRate = 7.292;
       let mAmount = amount * exchangeRate;
       const fromAdjustment = await newBalanceAdjustment(fromAccount.iban, -mAmount, description);
       const toAdjustment = await newBalanceAdjustment(toAccount.iban, mAmount, description);
