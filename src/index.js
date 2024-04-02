@@ -3,7 +3,7 @@ var app = express();
 const http = require('http');
 
 import { client } from './db';
-import { newAccount, getAccount, balanceChange, deleteAccount } from './account';
+import { newAccount, getAccount, balanceChange, deleteAccount, summarizeAccount } from './account';
 import { newBalanceAdjustment, getTransactions } from './transactions';
 import { newPendingBalanceAdjustment, getPendingTransactions } from './pentransactions';
 import { login } from './auth';
@@ -38,15 +38,15 @@ app.options("/*", function (req, res, next) {
 
 const server = http.createServer(app).listen(3006, async () => { // put options, app if https.createServer
    try {
-     await client.connect()
-     console.log("Connected to database")
+      await client.connect()
+      console.log("Connected to database")
    } catch (error) {
-     console.log("Error connecting to database")
-     console.log(error)
+      console.log("Error connecting to database")
+      console.log(error)
    }
    // await client.connect()
    console.log('Ordobank API is listening on port ' + 3006);
- });
+});
 
 import { authMiddleware } from './auth';
 
@@ -65,7 +65,7 @@ app.post('/login', async (req, res) => {
          res.sendStatus(401);
       }
    } catch (err) {
-      res.json({ error: err.message });
+      res.status(500).json({ error: err.message });
    }
 });
 
@@ -76,7 +76,7 @@ app.post('/newaccount', async (req, res) => {
       const account = await newAccount(name, password);
       res.send(account);
    } catch (err) {
-      res.json({ error: err.message });
+      res.status(500).json({ error: err.message });
    }
 });
 
@@ -85,16 +85,25 @@ app.get('/account', async (req, res) => {
       const account = await getAccount(req.account.iban);
       res.send(account);
    } catch (err) {
-      res.json({ error: err.message });
+      res.status(500).json({ error: err.message });
    }
 });
+
+app.get('/accountsummary', async (req, res) => {
+   try {
+      const summary = await summarizeAccount(req.account.iban);
+      res.json(summary);
+   } catch (err) {
+      res.status(500).json({ error: err.message });
+   }
+})
 
 app.post('/deleteaccount', async (req, res) => {
    try {
       const account = await deleteAccount(req.account.iban);
       res.send(account);
    } catch (err) {
-      res.json({ error: err.message });
+      res.status(500).json({ error: err.message });
    }
 });
 
@@ -104,7 +113,7 @@ app.get('/transactions', async (req, res) => {
       const transactions = await getTransactions(req.account.iban, req.query.fromDate, req.query.toDate);
       res.send(transactions);
    } catch (err) {
-      res.json({ error: err.message });
+      res.status(500).json({ error: err.message });
    }
 });
 
@@ -116,7 +125,7 @@ app.post('/balanceadjustment', async (req, res) => {
       const balance = await balanceChange(req.account.iban, amount);
       res.send(adjustment);
    } catch (err) {
-      res.json({ error: err.message });
+      res.status(500).json({ error: err.message });
    }
 });
 
@@ -127,7 +136,11 @@ app.post('/transfer', async (req, res) => {
       const fromAccount = await getAccount(req.account.iban);
       const toAccount = await getAccount(toIban);
       if (!toAccount) {
-         res.json({ error: "Recipient account not found" });
+         res.status(500).json({ error: "Recipient account not found" });
+         return;
+      }
+      if (parseFloat(amount) <= 0) {
+         res.status(500).json({ error: "Invalid amount" });
          return;
       }
       const fromAdjustment = await newBalanceAdjustment(fromAccount.iban, -amount, description);
@@ -136,7 +149,33 @@ app.post('/transfer', async (req, res) => {
       const toBalance = await balanceChange(toAccount.iban, amount);
       res.send(fromAdjustment);
    } catch (err) {
-      res.json({ error: err.message });
+      res.status(500).json({ error: err.message });
+   }
+});
+
+app.post('/transferFromORD', async (req, res) => {
+   try {
+      const { toIban, amount, description } = req.body;
+      const fromAccount = await getAccount(req.account.iban);
+      const toAccount = await getAccount(toIban);
+      if (!toAccount) {
+         res.status(500).json({ error: "Recipient account not found" });
+         return;
+      }
+      if (parseFloat(amount) <= 0) {
+         res.status(500).json({ error: "Invalid amount" });
+         return;
+      }
+      // Convert amount in ORD to KVND
+      const exchangeRate = 7292;
+      let mAmount = amount * exchangeRate;
+      const fromAdjustment = await newBalanceAdjustment(fromAccount.iban, -mAmount, description);
+      const toAdjustment = await newBalanceAdjustment(toAccount.iban, mAmount, description);
+      const fromBalance = await balanceChange(fromAccount.iban, -mAmount);
+      const toBalance = await balanceChange(toAccount.iban, mAmount);
+      res.send(fromAdjustment);
+   } catch (err) {
+      res.status(500).json({ error: err.message });
    }
 });
 
@@ -145,9 +184,9 @@ app.post('/pendingbalanceadjustment', async (req, res) => {
    try {
       const { amount, description } = req.body;
       const adjustment = await newPendingBalanceAdjustment(req.account.iban, amount, description);
-      res.send(adjustment);
+      res.status(500).send(adjustment);
    } catch (err) {
-      res.json({ error: err.message });
+      res.status(500).json({ error: err.message });
    }
 });
 
@@ -156,6 +195,6 @@ app.get('/pendingtransactions', async (req, res) => {
       const transactions = await getPendingTransactions(req.account.iban);
       res.send(transactions);
    } catch (err) {
-      res.json({ error: err.message });
+      res.status(500).json({ error: err.message });
    }
 });
