@@ -13,7 +13,7 @@ export const newBalanceAdjustment = async (iban, amount, description) => {
     }
 }
 
-export const getTransactions = async (iban, fromDate, toDate, fromDate, toDate) => {
+export const getTransactions = async (iban, fromDate, toDate) => {
     try {
         // Convert fromDate and toDate to Date objects
         fromDate = moment(fromDate).toDate();

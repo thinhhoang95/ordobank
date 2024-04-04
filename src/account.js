@@ -224,7 +224,6 @@ export const summarizeAccount = async (iban) => {
     } catch (err) {
         console.log(err.stack);
     }
-<<<<<<< HEAD
 }
 
 export const queryAccountName = async (iban) => {
@@ -234,6 +233,4 @@ export const queryAccountName = async (iban) => {
     return {
         name: result.name
     }
-=======
->>>>>>> 5e127696e68927e9b23b26209bc14c06ca816ad1
 }
