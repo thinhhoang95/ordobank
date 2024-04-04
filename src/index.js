@@ -3,15 +3,10 @@ var app = express();
 const http = require('http');
 
 import { client } from './db';
-<<<<<<< HEAD
 import { newAccount, getAccount, balanceChange, deleteAccount, summarizeAccount,
 queryAccountName } from './account';
 import { newBalanceAdjustment, getTransactions, getTransactionsCustom, getTransactionsCustomStats, 
 getTransactionsSummaryByDay } from './transactions';
-=======
-import { newAccount, getAccount, balanceChange, deleteAccount, summarizeAccount } from './account';
-import { newBalanceAdjustment, getTransactions, getTransactionsCustom, getTransactionsCustomStats } from './transactions';
->>>>>>> 5e127696e68927e9b23b26209bc14c06ca816ad1
 import { newPendingBalanceAdjustment, getPendingTransactions } from './pentransactions';
 import { login } from './auth';
 
@@ -158,7 +153,6 @@ app.get('/transactionsSummary', async (req, res) => {
       res.send(summary);
    } catch (err) {
       res.status(500).json({ error: err.message });
-<<<<<<< HEAD
    }
 });
 
@@ -168,8 +162,6 @@ app.get('/transactionsByDay', async (req, res) => {
       res.send(summary);
    } catch (err) {
       res.status(500).json({ error: err.message });
-=======
->>>>>>> 5e127696e68927e9b23b26209bc14c06ca816ad1
    }
 });
 
