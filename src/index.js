@@ -248,6 +248,15 @@ app.get('/pendingtransactions', async (req, res) => {
    }
 });
 
+app.get('/transactionsByDay', async (req, res) => {
+   try {
+      const summary = await getTransactionsSummaryByDay(req.account.iban, req.query.fromDate, req.query.toDate, req.query.searchTerms);
+      res.send(summary);
+   } catch (err) {
+      res.status(500).json({ error: err.message });
+   }
+});
+
 // ------------------- Swearing -------------------
 app.get('/swear', async (req, res) => {
    // return swear.html file
