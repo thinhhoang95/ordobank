@@ -49,6 +49,7 @@ const server = http.createServer(app).listen(3006, async () => { // put options,
 });
 
 import { authMiddleware } from './auth';
+import { getSwearCertificatePdf } from './swear';
 
 app.get('/', function (req, res) {
    res.send("Ordobank API");
@@ -225,4 +226,20 @@ app.get('/pendingtransactions', async (req, res) => {
    } catch (err) {
       res.status(500).json({ error: err.message });
    }
+});
+
+// ------------------- Swearing -------------------
+app.get('/swear', async (req, res) => {
+   // return swear.html file
+   res.sendFile(__dirname + '/swear.html');
+});
+
+app.post('/swearprint', async (req, res) => {
+   const { swear1, swear2 } = req.body;
+   // replace urlEncoded characters
+   let swear1Decoded = decodeURIComponent(swear1);
+   let swear2Decoded = decodeURIComponent(swear2);
+   let pdf = await getSwearCertificatePdf(swear1Decoded, swear2Decoded);
+   res.contentType("application/pdf");
+   res.send(pdf);
 });
