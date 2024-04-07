@@ -3,8 +3,10 @@ var app = express();
 const http = require('http');
 
 import { client } from './db';
-import { newAccount, getAccount, balanceChange, deleteAccount, summarizeAccount } from './account';
-import { newBalanceAdjustment, getTransactions, getTransactionsCustom, getTransactionsCustomStats } from './transactions';
+import { newAccount, getAccount, balanceChange, deleteAccount, summarizeAccount,
+queryAccountName } from './account';
+import { newBalanceAdjustment, getTransactions, getTransactionsCustom, getTransactionsCustomStats, 
+getTransactionsSummaryByDay } from './transactions';
 import { newPendingBalanceAdjustment, getPendingTransactions } from './pentransactions';
 import { login } from './auth';
 
@@ -108,6 +110,15 @@ app.post('/deleteaccount', async (req, res) => {
    }
 });
 
+app.get('/queryIbanName', async (req, res) => {
+   try {
+      const ibanName = await queryAccountName(req.query.iban)
+      res.send(ibanName)
+   } catch (err) {
+      res.status(500).json({ error: err.message })
+   }
+})
+
 // ------------------- Transactions -------------------
 app.get('/transactions', async (req, res) => {
    try {
@@ -140,6 +151,15 @@ app.get('/transactionsSummary', async (req, res) => {
    try {
       const transactions = await getTransactions(req.account.iban, req.query.fromDate, req.query.toDate);
       const summary = groupTransactionsByCategory(transactions);
+      res.send(summary);
+   } catch (err) {
+      res.status(500).json({ error: err.message });
+   }
+});
+
+app.get('/transactionsByDay', async (req, res) => {
+   try {
+      const summary = await getTransactionsSummaryByDay(req.account.iban, req.query.fromDate, req.query.toDate, req.query.searchTerms);
       res.send(summary);
    } catch (err) {
       res.status(500).json({ error: err.message });

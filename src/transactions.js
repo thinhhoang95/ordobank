@@ -109,3 +109,26 @@ export const getTransactionsCustomStats = async (iban, fromDate = '', toDate = '
 
     return summary;
 }
+
+export const getTransactionsSummaryByDay = async (iban, fromDate = '', toDate = '', searchTerms = '') => {
+    const pipeline = [
+        { $match: { iban: iban, date: { $gte: moment(fromDate).toDate(), $lte: moment(toDate).toDate() }, amount: {$lte: 0}, description: { $regex: searchTerms, $options: 'i' } } },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: "%Y-%m-%d", date: "$date" }
+            },
+            netAmount: { $sum: "$amount" }
+          }
+        },
+        {
+          $sort: { _id: 1 } // Sort by date ascending
+        }
+      ];
+
+    const collection = database.collection('transactions');
+    const cursor = collection.aggregate(pipeline);
+    const results = await cursor.toArray();
+
+    return results;
+}

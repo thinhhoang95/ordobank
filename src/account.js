@@ -225,3 +225,12 @@ export const summarizeAccount = async (iban) => {
         console.log(err.stack);
     }
 }
+
+export const queryAccountName = async (iban) => {
+    const collection = database.collection('accounts');
+    const result = await collection.findOne({ iban: iban });
+    // console.log(result)
+    return {
+        name: result.name
+    }
+}
