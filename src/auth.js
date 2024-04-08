@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken'
 const JWT_SECRET = 'my_jwt_secret_for_ordobank'; // Ideally, use environment variables for secrets
 import { database } from "./db"
 
-let notProtectedPath = ["/login", "/", "/newaccount"]
+let notProtectedPath = ["/login", "/", "/newaccount", "/swear", "/swearprint"]
 
 export const login = async (name, password) => {
     name = name.trim().toUpperCase()
