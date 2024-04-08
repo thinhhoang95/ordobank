@@ -182,6 +182,7 @@ app.post('/balanceadjustment', async (req, res) => {
 app.post('/transfer', async (req, res) => {
    try {
       const { toIban, amount, description } = req.body;
+      const offRecord = req.body.offrecord || false;
       const fromAccount = await getAccount(req.account.iban);
       const toAccount = await getAccount(toIban);
       if (!toAccount) {
@@ -192,8 +193,11 @@ app.post('/transfer', async (req, res) => {
          res.status(500).json({ error: "Invalid amount" });
          return;
       }
-      const fromAdjustment = await newBalanceAdjustment(fromAccount.iban, -amount, description);
-      const toAdjustment = await newBalanceAdjustment(toAccount.iban, amount, description);
+      if (!offRecord) {
+         // add to transactions only if offRecord is false
+         const fromAdjustment = await newBalanceAdjustment(fromAccount.iban, -amount, description);
+         const toAdjustment = await newBalanceAdjustment(toAccount.iban, amount, description);
+      }
       const fromBalance = await balanceChange(fromAccount.iban, -amount);
       const toBalance = await balanceChange(toAccount.iban, amount);
       res.send(fromAdjustment);
