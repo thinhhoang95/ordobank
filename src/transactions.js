@@ -84,7 +84,7 @@ export const getTransactionsCustom = async (iban, fromDate = '', toDate = '', se
     ];
 
     if (offRecord === false) {
-        aggregate[0]['$match']['offRecord'] = false
+        aggregate[0]['$match']['offRecord'] = {$in: [false, undefined]}
     }
 
     // Execute the query
@@ -94,7 +94,7 @@ export const getTransactionsCustom = async (iban, fromDate = '', toDate = '', se
     // Calculate the total number of documents
     let query = { iban: iban, date: { $gte: moment(fromDate).toDate(), $lte: moment(toDate).toDate() }, description: { $regex: searchTerms, $options: 'i' } };
     if (offRecord === false) {
-        query['offRecord'] = false
+        query['offRecord'] = {$in: [false, undefined]}
     }
     const total = await collection.countDocuments(query);
     return { results, total };
@@ -110,7 +110,7 @@ export const getTransactionsCustomStats = async (iban, fromDate = '', toDate = '
     ];
 
     if (offRecord === false) {
-        aggregate[0]['$match']['offRecord'] = false
+        aggregate[0]['$match']['offRecord'] = {$in: [false, undefined]}
     }
 
     // Execute the query

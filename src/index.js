@@ -52,7 +52,6 @@ const server = http.createServer(app).listen(3006, async () => { // put options,
 
 import { authMiddleware } from './auth';
 import { getSwearCertificatePdf } from './swear';
-import { getSwearCertificatePdf } from './swear';
 
 app.get('/', function (req, res) {
    res.send("Ordobank API");
@@ -215,7 +214,7 @@ app.post('/transfer', async (req, res) => {
          return;
       }
       const fromAdjustment = await newBalanceAdjustment(fromAccount.iban, -amount, description, offRecord);
-      const toAdjustment = await newBalanceAdjustment(toAccount.iban, amount, description, false); // offRecord = false
+      const toAdjustment = await newBalanceAdjustment(toAccount.iban, amount, description, false); // offRecord = false: deposit is always on record
       const fromBalance = await balanceChange(fromAccount.iban, -amount);
       const toBalance = await balanceChange(toAccount.iban, amount);
       res.send(fromAdjustment);
