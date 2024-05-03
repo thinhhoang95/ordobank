@@ -131,7 +131,14 @@ app.get('/transactions', async (req, res) => {
 
 app.get('/transactionsCustom', async (req, res) => {
    try {
-      const transactions = await getTransactionsCustom(req.account.iban, req.query.fromDate, req.query.toDate, req.query.searchTerms, req.query.page);
+      let offRecord = req.query.offRecord || '1'; // include off-record records by default
+      if (offRecord === '0')
+      {
+         offRecord = false
+      } else {
+         offRecord = true
+      }
+      const transactions = await getTransactionsCustom(req.account.iban, req.query.fromDate, req.query.toDate, req.query.searchTerms, offRecord, req.query.page);
       res.send(transactions);
    } catch (err) {
       res.status(500).json({ error: err.message });
@@ -140,7 +147,14 @@ app.get('/transactionsCustom', async (req, res) => {
 
 app.get('/transactionsCustomStats', async (req, res) => {
    try {
-      const stats = await getTransactionsCustomStats(req.account.iban, req.query.fromDate, req.query.toDate, req.query.searchTerms);
+      let offRecord = req.query.offRecord || '1'; // include off-record records by default
+      if (offRecord === '0')
+      {
+         offRecord = false
+      } else {
+         offRecord = true
+      }
+      const stats = await getTransactionsCustomStats(req.account.iban, req.query.fromDate, req.query.toDate, req.query.searchTerms, offRecord);
       res.send(stats);
    } catch (err) {
       res.status(500).json({ error: err.message });
@@ -182,7 +196,13 @@ app.post('/balanceadjustment', async (req, res) => {
 app.post('/transfer', async (req, res) => {
    try {
       const { toIban, amount, description } = req.body;
-      const offRecord = req.body.offrecord || false;
+      let offRecord = req.body.offRecord || '0';
+      if (offRecord === '1')
+      {
+         offRecord = true
+      } else {
+         offRecord = false
+      }
       const fromAccount = await getAccount(req.account.iban);
       const toAccount = await getAccount(toIban);
       if (!toAccount) {
@@ -194,7 +214,7 @@ app.post('/transfer', async (req, res) => {
          return;
       }
       const fromAdjustment = await newBalanceAdjustment(fromAccount.iban, -amount, description, offRecord);
-      const toAdjustment = await newBalanceAdjustment(toAccount.iban, amount, description, false); // offRecord = false
+      const toAdjustment = await newBalanceAdjustment(toAccount.iban, amount, description, false); // offRecord = false: deposit is always on record
       const fromBalance = await balanceChange(fromAccount.iban, -amount);
       const toBalance = await balanceChange(toAccount.iban, amount);
       res.send(fromAdjustment);
@@ -247,6 +267,31 @@ app.get('/pendingtransactions', async (req, res) => {
    } catch (err) {
       res.status(500).json({ error: err.message });
    }
+});
+
+app.get('/transactionsByDay', async (req, res) => {
+   try {
+      const summary = await getTransactionsSummaryByDay(req.account.iban, req.query.fromDate, req.query.toDate, req.query.searchTerms);
+      res.send(summary);
+   } catch (err) {
+      res.status(500).json({ error: err.message });
+   }
+});
+
+// ------------------- Swearing -------------------
+app.get('/swear', async (req, res) => {
+   // return swear.html file
+   res.sendFile(__dirname + '/swear.html');
+});
+
+app.post('/swearprint', async (req, res) => {
+   const { swear1, swear2 } = req.body;
+   // replace urlEncoded characters
+   let swear1Decoded = decodeURIComponent(swear1);
+   let swear2Decoded = decodeURIComponent(swear2);
+   let pdf = await getSwearCertificatePdf(swear1Decoded, swear2Decoded);
+   res.contentType("application/pdf");
+   res.send(pdf);
 });
 
 app.get('/transactionsByDay', async (req, res) => {

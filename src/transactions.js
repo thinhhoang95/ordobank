@@ -69,7 +69,7 @@ const groupTransactionsByCategory = (transactions) => {
     return summary;
 }
 
-export const getTransactionsCustom = async (iban, fromDate = '', toDate = '', searchTerms = '', page = 0) => {
+export const getTransactionsCustom = async (iban, fromDate = '', toDate = '', searchTerms = '', offRecord, page = 0) => {
     const pageSize = 10;
     const collection = database.collection('transactions');
     // Calculate the number of documents to skip
@@ -83,16 +83,24 @@ export const getTransactionsCustom = async (iban, fromDate = '', toDate = '', se
         { $limit: pageSize }
     ];
 
+    if (offRecord === false) {
+        aggregate[0]['$match']['offRecord'] = {$in: [false, undefined]}
+    }
+
     // Execute the query
     const cursor = collection.aggregate(aggregate);
     const results = await cursor.toArray();
 
     // Calculate the total number of documents
-    const total = await collection.countDocuments({ iban: iban, date: { $gte: moment(fromDate).toDate(), $lte: moment(toDate).toDate() }, description: { $regex: searchTerms, $options: 'i' } });
+    let query = { iban: iban, date: { $gte: moment(fromDate).toDate(), $lte: moment(toDate).toDate() }, description: { $regex: searchTerms, $options: 'i' } };
+    if (offRecord === false) {
+        query['offRecord'] = {$in: [false, undefined]}
+    }
+    const total = await collection.countDocuments(query);
     return { results, total };
 }
 
-export const getTransactionsCustomStats = async (iban, fromDate = '', toDate = '', searchTerms = '') => {
+export const getTransactionsCustomStats = async (iban, fromDate = '', toDate = '', searchTerms = '', offRecord) => {
     const collection = database.collection('transactions');
 
     // Construct the query: matching iban, date range, and contains search terms
@@ -100,6 +108,10 @@ export const getTransactionsCustomStats = async (iban, fromDate = '', toDate = '
         { $match: { iban: iban, date: { $gte: moment(fromDate).toDate(), $lte: moment(toDate).toDate() }, description: { $regex: searchTerms, $options: 'i' } } },
         { $sort: { date: -1 } }
     ];
+
+    if (offRecord === false) {
+        aggregate[0]['$match']['offRecord'] = {$in: [false, undefined]}
+    }
 
     // Execute the query
     const cursor = collection.aggregate(aggregate);
@@ -112,7 +124,7 @@ export const getTransactionsCustomStats = async (iban, fromDate = '', toDate = '
 
 export const getTransactionsSummaryByDay = async (iban, fromDate = '', toDate = '', searchTerms = '') => {
     const pipeline = [
-        { $match: { iban: iban, date: { $gte: moment(fromDate).toDate(), $lte: moment(toDate).toDate() }, amount: {$lte: 0}, description: { $regex: searchTerms, $options: 'i' } } },
+        { $match: { iban: iban, date: { $gte: moment(fromDate).toDate(), $lte: moment(toDate).toDate() }, amount: {$lte: 0}, offRecord: { $in: [false, undefined] }, description: { $regex: searchTerms, $options: 'i' } } },
         {
           $group: {
             _id: {
