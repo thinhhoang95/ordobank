@@ -75,15 +75,15 @@ const getCurrentMonthDateRange = () => {
 }
 
 const getLastWeekDateRange = () => {
-    let startOfWeek = moment().subtract(1, 'weeks').startOf('week').toDate();
-    let endOfWeek = moment().subtract(1, 'weeks').endOf('week').toDate();
-    return { startOfWeek, endOfWeek };
+    let startOfLastWeek = moment().subtract(1, 'week').startOf('week').toDate();
+    let endOfLastWeek = moment().subtract(1, 'week').endOf('week').toDate();
+    return { startOfLastWeek, endOfLastWeek };
 }
 
 const getLastMonthDateRange = () => {
-    let startOfMonth = moment().subtract(1, 'months').startOf('month').toDate();
-    let endOfMonth = moment().subtract(1, 'months').endOf('month').toDate();
-    return { startOfMonth, endOfMonth };
+    let startOfLastMonth = moment().subtract(1, 'months').startOf('month').toDate();
+    let endOfLastMonth = moment().subtract(1, 'months').endOf('month').toDate();
+    return { startOfLastMonth, endOfLastMonth };
 }
 
 export const summarizeAccount = async (iban) => {
@@ -95,7 +95,7 @@ export const summarizeAccount = async (iban) => {
         let { startOfLastWeek, endOfLastWeek } = getLastWeekDateRange();
         let { startOfMonth, endOfMonth } = getCurrentMonthDateRange();
         let { startOfLastMonth, endOfLastMonth } = getLastMonthDateRange();
-
+        
         let aggRules = [
             {
                 $match: {

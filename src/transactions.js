@@ -1,12 +1,12 @@
 import moment from 'moment-timezone';
 import { database } from './db'
 
-export const newBalanceAdjustment = async (iban, amount, description) => {
+export const newBalanceAdjustment = async (iban, amount, description, offRecord = false) => {
     try {
         // convert amount to number
         amount = parseFloat(amount);
         // console.log("Adjusting balance of account with IBAN ", iban)
-        let adjustment = await database.collection('transactions').insertOne({ iban: iban, amount: amount, description: description, date: moment().toDate()});
+        let adjustment = await database.collection('transactions').insertOne({ iban: iban, amount: amount, description: description, date: moment().toDate(), offRecord: offRecord});
         return adjustment;
     } catch (err) {
         console.log(err.stack);
