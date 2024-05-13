@@ -2,6 +2,8 @@ var express = require('express');
 var app = express();
 const http = require('http');
 
+import fs from 'fs';
+
 import { client } from './db';
 import { newAccount, getAccount, balanceChange, deleteAccount, summarizeAccount,
 queryAccountName } from './account';
@@ -236,8 +238,12 @@ app.post('/transferFromORD', async (req, res) => {
          res.status(500).json({ error: "Invalid amount" });
          return;
       }
-      // Convert amount in ORD to KVND
-      const exchangeRate = 7.292;
+      // Read rate.json file to get exchange rate
+      const ratesRaw = fs.readFileSync('rate.json');
+      const rates = JSON.parse(ratesRaw);
+      // get the first 2 characters of the toIban to get the currency
+      const currency = toIban.substring(0, 2).toUpperCase();
+      let exchangeRate = rates[currency];
       let mAmount = amount * exchangeRate;
       const fromAdjustment = await newBalanceAdjustment(fromAccount.iban, -mAmount, description);
       const toAdjustment = await newBalanceAdjustment(toAccount.iban, mAmount, description);
